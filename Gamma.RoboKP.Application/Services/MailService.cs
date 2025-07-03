@@ -1,13 +1,16 @@
+using Gamma.RoboKP.Domain.Abstractions.Repositories;
 using Gamma.RoboKP.Domain.Abstractions.Services;
 using Gamma.RoboKP.Domain.Entities;
+using Gamma.RoboKP.Domain.Exceptions;
 using Gamma.RoboKP.Domain.Options;
 using MailKit.Net.Smtp;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
 namespace Gamma.RoboKP.Application.Services;
 
-public class MailService(IOptions<EmailConfiguration> emailConfiguration) : IMailService
+public class MailService(IOptions<EmailConfiguration> emailConfiguration, IUserRepository userRepository) : IMailService
 {
     private readonly EmailConfiguration _emailConfiguration = emailConfiguration.Value;
 
@@ -32,5 +35,32 @@ public class MailService(IOptions<EmailConfiguration> emailConfiguration) : IMai
             return true;
         
         
+    }
+
+    public async Task<bool> ConfirmMail(string email, string code)
+    {
+        var user = await userRepository.FindByEmailAsync(email);
+
+        if (user == null)
+        {
+            throw new EntityNotFoundException(
+                new List<IdentityError>{new IdentityError()
+                {
+                    Description  = $"Пользователь с почтой {email} не найден",
+                    Code = "Email not found" } });
+        }
+
+        if (user.VerifyCode != code) return false;
+        
+        user.ConfirmEmail();
+        user.SetVerifyCode(null);
+        await userRepository.UpdateAsync(user);
+        return true;
+    }
+    
+    public string GenerateConfirmationCode()
+    {
+        var random = new Random();
+        return random.Next(10000, 99999).ToString();
     }
 }

@@ -26,6 +26,7 @@ public class User : BaseEntity<long>
     public Company Company { get; private set; }
     public string Email { get; private set; }
     public bool EmailConfirmed { get; private set; }
+    public string? VerifyCode { get; private set; }
 
     public void SetEmail(string email)
     {
@@ -38,8 +39,16 @@ public class User : BaseEntity<long>
         if (email == Email) return;
         Email = email;
         EmailConfirmed = false;
-        
-        //domain event для подтверждения
+    }
+
+    public void SetVerifyCode(string? verifyCode)
+    {
+        VerifyCode = verifyCode;
+    }
+
+    public void ConfirmEmail()
+    {
+        EmailConfirmed = true;
     }
 
     public void SetStatus(UserStatus status)

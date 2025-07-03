@@ -34,7 +34,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         var token = tokenService.GenerateAccessToken(result);
         var refreshToken = await tokenService.GenerateRefreshToken(result.Id);
         
-        Response.Cookies.Append("access_token", token, new CookieOptions
+        Response.Cookies.Append("access_token", token, new CookieOptions //todo: пока что так, но по идее нужно добавлять токены только после подтверждения почты
         {
             HttpOnly = true,
             Secure = true,
@@ -182,5 +182,17 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         var errors = result.Errors.Select(e => e.Description);
         return BadRequest(new {Errors = errors});
 
+    }
+
+    [HttpPost("confirm-email")]
+    public async Task<ActionResult> ConfirmEmail(ConfirmEmailRequest confirmEmailRequest)
+    {
+        var result = await mailService.ConfirmMail(confirmEmailRequest.Email, confirmEmailRequest.Code);
+        if (result)
+        {
+            return Ok(new {Message = "Почта успешно подтверждена"});
+            
+        }
+        return BadRequest(new { Message = "Неверный код подтверждения" });
     }
 }

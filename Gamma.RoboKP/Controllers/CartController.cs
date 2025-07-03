@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Gamma.RoboKP.Controllers;
-
+//todo: протестировать
 [ApiController]
 [Route("api/carts")]
 public class CartController(
@@ -23,7 +23,7 @@ public class CartController(
     }
 
     [HttpGet("products")]
-    public async Task<ActionResult<List<ProductResponseDto>>> GetProducts()
+    public async Task<ActionResult<List<ProductResponseDto>>> GetProducts() // TODO: не работает
     {
         var userId = "1234";
         if (userId == null) return Unauthorized();

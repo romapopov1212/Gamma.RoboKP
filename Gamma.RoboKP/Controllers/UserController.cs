@@ -2,8 +2,10 @@ using System.Security.Claims;
 using Gamma.RoboKP.Domain.Abstractions.Services;
 using Gamma.RoboKP.Domain.Entities;
 using Gamma.RoboKP.Domain.Enums;
+using Gamma.RoboKP.Domain.ValueObject;
 //using Gamma.RoboKP.Domain.Models;
 using Gamma.RoboKP.Filters.ExceptionsFilters;
+using Gamma.RoboKP.Models.CompanyDto;
 using Gamma.RoboKP.Models.User;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -115,5 +117,20 @@ public class UserController(IUserService userService, [FromKeyedServices("Contro
         if (response) return Ok();
         
         return NotFound();
+    }
+
+    [Authorize]
+    [HttpPatch("user/profile/company")]
+    public async Task<ActionResult<bool>> UpdateProfile([FromBody] CompanyToAdd companyToAdd)
+    {
+        var userIdFromClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdFromClaims is null) return Unauthorized();
+        
+        long userId = long.Parse(userIdFromClaims);
+        var company = mapper.Map<CompanyToAdd, Company>(companyToAdd);
+        var response = await userService.SetCompanyInfo(company, userId);
+        
+        if (response) return Ok();
+        return BadRequest(response);
     }
 }

@@ -21,5 +21,8 @@ public class AppUser : IdentityUser<long>
     
     public UserStatus Status { get; set; }
     
-    public required Company Company  { get; set; }
+    public Company? Company  { get; set; }
+    
+    [MaxLength(5)]
+    public string? VerifyCode { get; set; }
 }

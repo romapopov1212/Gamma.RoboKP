@@ -3,6 +3,7 @@ using Gamma.RoboKP.Domain.Abstractions.Services;
 using Gamma.RoboKP.Domain.Entities;
 using Gamma.RoboKP.Domain.Enums;
 using Gamma.RoboKP.Domain.Exceptions;
+using Gamma.RoboKP.Domain.ValueObject;
 using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
 
@@ -160,5 +161,10 @@ public class UserService(IUserRepository userRepository) : IUserService
     public async Task<IdentityResult?> ResetPassword(string email, string token, string newPassword)
     {
         return await userRepository.ResetPassword(email, token, newPassword);
+    }
+
+    public async Task<bool> SetCompanyInfo(Company company, long userId)
+    {
+        return await userRepository.SetCompanyInfo(company, userId);
     }
 }

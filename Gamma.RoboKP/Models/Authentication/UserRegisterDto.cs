@@ -18,8 +18,8 @@ public record UserRegisterDto(
     [Required(ErrorMessage = "Поле 'пароль' обязательно для заполнения")]
     [StringLength(100, MinimumLength = 8, ErrorMessage = "Минимальная длина пароля - 8 символов")]
     [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$", ErrorMessage = "Пароль должен содержать буквы разного регистра и цифры")]
-    string Password,
+    string Password
     
-    [Required(ErrorMessage = "Компания обязательна")]
-    Company Company
+   // [Required(ErrorMessage = "Компания обязательна")]
+   // Company Company
     );

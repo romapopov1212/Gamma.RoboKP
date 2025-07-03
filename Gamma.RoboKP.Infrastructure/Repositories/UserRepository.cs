@@ -2,6 +2,7 @@ using Gamma.RoboKP.Domain.Abstractions.Repositories;
 using Gamma.RoboKP.Domain.Entities;
 using Gamma.RoboKP.Domain.Enums;
 using Gamma.RoboKP.Domain.Exceptions;
+using Gamma.RoboKP.Domain.ValueObject;
 using Gamma.RoboKP.Infrastructure.Models;
 using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
@@ -132,7 +133,47 @@ public class UserRepository(UserManager<AppUser> userManager, [FromKeyedServices
         appUser.LastName = user.LastName;
         appUser.SurName = user.SurName;
         appUser.Status = user.Status;
+        appUser.VerifyCode = user.VerifyCode;
+        if (user.EmailConfirmed) appUser.EmailConfirmed = true;
         
+        var result = await userManager.UpdateAsync(appUser);
+        return result;
+    }
+
+    public async Task<IdentityResult> ConfirmEmail(long userId)
+    {
+        var appUser = await userManager.FindByIdAsync(userId.ToString());
+        if (appUser == null)
+        {
+            throw new EntityNotFoundException(new List<IdentityError>
+            {
+                new IdentityError
+                {
+                    Description = $"Пользователь с id {userId} не найден",
+                    Code = "UserNotFound"
+                }
+            });
+        }
+        appUser.EmailConfirmed = true;
+        var result = await userManager.UpdateAsync(appUser);
+        return result;
+    }
+
+    public async Task<IdentityResult> SetConfirmCode(long userId, string code)
+    {
+        var appUser = await userManager.FindByIdAsync(userId.ToString());
+        if (appUser == null)
+        {
+            throw new EntityNotFoundException(new List<IdentityError>
+            {
+                new IdentityError
+                {
+                    Description = $"Пользователь с id {userId} не найден",
+                    Code = "UserNotFound"
+                }
+            });
+        }
+        appUser.VerifyCode = code;
         var result = await userManager.UpdateAsync(appUser);
         return result;
     }
@@ -166,5 +207,16 @@ public class UserRepository(UserManager<AppUser> userManager, [FromKeyedServices
         var result = await userManager.ResetPasswordAsync(appUser, token, newPassword);
         
         return result;
+    }
+
+    public async Task<bool> SetCompanyInfo(Company company, long userId)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user == null) return false;
+        
+        user.Company = company;
+        var result = await userManager.UpdateAsync(user);
+        
+        return result.Succeeded;
     }
 }

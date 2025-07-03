@@ -2,13 +2,14 @@ namespace Gamma.RoboKP.Domain.ValueObject;
 
 public class Company : ValueObject
 {
-    public Company(string companyName, string kpp, string inn, string ogrn, string address)
+    public Company(string companyName, string kpp, string inn, string ogrn, string address, string phone)
     {
         CompanyName = companyName;
         Kpp = kpp;
         Inn = inn;
         Ogrn = ogrn;
         Address = address;
+        Phone = phone;
     }
     
     public string CompanyName { get; private set; }
@@ -16,6 +17,7 @@ public class Company : ValueObject
     public string Inn { get; private set; }
     public string Ogrn { get; private set; }
     public string Address { get; private set; }
+    public string Phone { get; private set;}
     
     protected override IEnumerable<object> GetEqualityComponents()
     {
@@ -24,5 +26,6 @@ public class Company : ValueObject
         yield return Inn;
         yield return Ogrn;
         yield return Address.ToLowerInvariant();
+        yield return Phone;
     }
 }

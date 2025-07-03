@@ -27,7 +27,7 @@ public static class ServiceCollectionsExtensions
         {
             options.SwaggerDoc("v1", new OpenApiInfo
             {
-                Title = "Rutok Download Video",
+                Title = "Gamma.RoboKP API",
                 Version = "v1",
             });
             

@@ -1,4 +1,5 @@
 using Gamma.RoboKP.Domain.Entities;
+using Gamma.RoboKP.Domain.ValueObject;
 using Microsoft.AspNetCore.Identity;
 
 namespace Gamma.RoboKP.Domain.Abstractions.Services;
@@ -16,4 +17,5 @@ public interface IUserService
     Task<User?> GetUserById(long id);
     Task<string?> GeneratePasswordResetTokenAsync(string email);
     Task<IdentityResult?> ResetPassword(string email, string token, string newPassword);
+    Task<bool> SetCompanyInfo(Company company, long userId);
 }

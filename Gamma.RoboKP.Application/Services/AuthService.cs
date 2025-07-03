@@ -14,7 +14,8 @@ namespace Gamma.RoboKP.Application.Services;
 public class AuthService(ITokenRepository refreshTokenRepository,
     IRefreshTokenService refreshTokenService,
     ITokenService tokenService,
-    IUserRepository userRepository) : IAuthService
+    IUserRepository userRepository,
+    IMailService mailService) : IAuthService
 {
     public async Task<User> Register(User userRegister, string password)
     {
@@ -48,6 +49,17 @@ public class AuthService(ITokenRepository refreshTokenRepository,
             
             if (result.Succeeded)
             {
+                var confirmationCode =  mailService.GenerateConfirmationCode();
+                user.SetVerifyCode(confirmationCode);
+                await userRepository.UpdateAsync(user);
+                
+                var mailData = new MailData(
+                    user.Email,
+                    user.Email,
+                    "Подтверждение регистрации",
+                    $"Ваш код подтверждения: {confirmationCode}");
+        
+                mailService.SendMail(mailData);
                 return user;
             }
     
@@ -84,6 +96,21 @@ public class AuthService(ITokenRepository refreshTokenRepository,
                     {
                         Description  = "Ошибка. Пользователю не присвоена роль",
                         Code = "Exception. User role not found." } });
+            }
+
+            if (!user.EmailConfirmed)
+            {
+                var confirmationCode =  mailService.GenerateConfirmationCode();
+                user.SetVerifyCode(confirmationCode);
+                await userRepository.UpdateAsync(user);
+                
+                var mailData = new MailData(
+                    user.Email,
+                    user.Email,
+                    "Подтверждение регистрации",
+                    $"Ваш код подтверждения: {confirmationCode}");
+        
+                mailService.SendMail(mailData);
             }
             
             return user;
@@ -126,4 +153,6 @@ public class AuthService(ITokenRepository refreshTokenRepository,
         
         return user;
     }
+    
+    
 }
