@@ -4,7 +4,7 @@ using Gamma.RoboKP.Domain.Entities;
 
 namespace Gamma.RoboKP.Application.Services;
 
-public class ProductService(IProductRepository productRepository) : IProductService
+public class ProductService(IProductRepository productRepository, IDiscountRepository discountRepository) : IProductService
 {
     public async Task<long> CreateProduct(ProductEntity product)
     {
@@ -20,23 +20,12 @@ public class ProductService(IProductRepository productRepository) : IProductServ
     {
         var product = await productRepository.Get(id);
         if (product == null) return null;
-        
-        var price = product.Price;
 
-        if (status == "Silver")
-        {
-            price *= 0.9m; //TODO: временно написал скидку руками, нужно понят как часто она меняется
-        }
-        else if (status == "Gold")
-        {
-            price *= 0.8m;
-        }
-        else if (status == "Platinum")
-        {
-            price *= 0.7m;
-        }
-        
-        product.ChangePrice(price);  
+        var discount = await discountRepository.Get(status);
+        if (discount != null)
+            product.ChangePrice(
+                (decimal) ((double) product.Price * discount.GetMultiplier())
+                );
         
         return product;
     }

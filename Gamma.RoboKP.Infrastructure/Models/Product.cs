@@ -17,6 +17,7 @@ public class Product
     public string ImageUrl { get; set; } = string.Empty;
     public long CategoryId { get; set; }
     public long SubCategoryId { get; set; }
+    public required List<CartProduct> CartProducts { get; set; }
     public required Category Category { get; set; }
     public required SubCategory SubCategory { get; set; }
 }
