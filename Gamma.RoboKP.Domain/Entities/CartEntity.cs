@@ -4,12 +4,12 @@ public class CartEntity
 {
     public CartEntity() {}
 
-    public CartEntity(string userId)
+    public CartEntity(long userId)
     {
         UserId = userId;
         Products = new List<ProductEntity>();
     }
     
-    public string UserId { get; set; }
+    public long UserId { get; set; }
     public List<ProductEntity> Products { get; private set; }
 }

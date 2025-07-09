@@ -3,11 +3,13 @@ using Gamma.RoboKP.Domain.Abstractions.Services;
 using Gamma.RoboKP.Models.Cart;
 using Gamma.RoboKP.Models.Product;
 using MapsterMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Gamma.RoboKP.Controllers;
 //todo: протестировать
+[Authorize]
 [ApiController]
 [Route("api/carts")]
 public class CartController(
@@ -15,56 +17,78 @@ public class CartController(
     [FromKeyedServices("ControllerMapper")] IMapper mapper) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<CartResponseDto>>> GetAllCarts()
+    public async Task<ActionResult<List<CartResponseDto>>> GetAllCarts() // не раьротет
     {
         var result = await cartService.GetAll();
+        
+        
+        
         var cart = mapper.Map<List<CartResponseDto>>(result);
         return Ok(cart);
     }
 
     [HttpGet("products")]
-    public async Task<ActionResult<List<ProductResponseDto>>> GetProducts() // TODO: не работает
+    public async Task<ActionResult<List<ProductResponseDto>>> GetProducts()
     {
-        var userId = "1234";
-        if (userId == null) return Unauthorized();
+        var userIdFromClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdFromClaims == null) return Unauthorized();
+        
+        var userId = int.Parse(userIdFromClaims);
+        
         var result = await cartService.GetProducts(userId);
         if (result == null) return NotFound();
         return Ok(mapper.Map<List<ProductResponseDto>>(result));
     }
 
     [HttpPost("{productId}")]
-    public async Task<ActionResult> AddProduct(long productId)
+    public async Task<ActionResult<long>> AddProduct(long productId)
     {
-        var userId = "1234";
-        if (userId == null) return Unauthorized();
+        var userIdFromClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdFromClaims == null) return Unauthorized();
+        
+        var userId = int.Parse(userIdFromClaims);
+        
         var result = await cartService.AddProduct(userId, productId);
-        return !result.IsNullOrEmpty() ? Ok() : NotFound();
+        
+        return result == null ? NotFound() : Ok(result);
     }
     
     [HttpDelete("{productId}")]
     public async Task<ActionResult> RemoveProduct(long productId)
     {
-        var userId = "1234";
-        if (userId == null) return Unauthorized();
+        var userIdFromClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdFromClaims == null) return Unauthorized();
+        
+        var userId = int.Parse(userIdFromClaims);
+        
         var result = await cartService.RemoveProduct(userId, productId);
-        return !result.IsNullOrEmpty() ? Ok() : NotFound();
+        
+        return result == null ? NotFound() : Ok(result);
     }
 
     [HttpPatch("clean")]
     public async Task<ActionResult> CleanCart()
     {
-        var userId = "1234";
-        if (userId == null) return Unauthorized();
+        var userIdFromClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdFromClaims == null) return Unauthorized();
+        
+        var userId = int.Parse(userIdFromClaims);
+        
         var result = await cartService.Flush(userId);
+        
         return result ? Ok() : NotFound();
     }
 
     [HttpGet("cost")]
     public async Task<ActionResult<long>> GetCost()
     {
-        var userStatus = User.FindFirst(ClaimTypes.UserData)?.Value;
-        var userId = "1234";
-        if (userStatus == null || userId == null) return Unauthorized();
+        var userStatus = User.FindFirst(ClaimTypes.UserData)?.Value; /// ???
+        
+        var userIdFromClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdFromClaims == null) return Unauthorized();
+        
+        var userId = int.Parse(userIdFromClaims);
+        
         var result = await cartService.GetTotalCost(userId);
         return result != null ? Ok(result) : NotFound();
     }

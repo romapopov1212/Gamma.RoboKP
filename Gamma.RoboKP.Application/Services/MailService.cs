@@ -33,8 +33,6 @@ public class MailService(IOptions<EmailConfiguration> emailConfiguration, IUserR
             mailClient.Disconnect(true);
             mailClient.Dispose();
             return true;
-        
-        
     }
 
     public async Task<bool> ConfirmMail(string email, string code)

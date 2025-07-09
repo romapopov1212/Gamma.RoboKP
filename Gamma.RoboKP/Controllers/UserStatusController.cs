@@ -1,10 +1,13 @@
 using Gamma.RoboKP.Domain.Abstractions.Services;
+using Gamma.RoboKP.Domain.Enums;
 using Gamma.RoboKP.Models.UserStatusModels;
 using MapsterMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gamma.RoboKP.Controllers;
 
+[Authorize(Roles = nameof(UserRole.Admin))]
 [ApiController]
 [Route("api/user_status")]
 public class UserStatusController(

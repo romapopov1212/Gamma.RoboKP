@@ -7,6 +7,7 @@ COPY ["Gamma.RoboKP/Gamma.RoboKP.csproj", "Gamma.RoboKP/"]
 COPY ["Gamma.RoboKP.Infrastructure/Gamma.RoboKP.Infrastructure.csproj", "Gamma.RoboKP.Infrastructure/"]
 COPY ["Gamma.RoboKP.Application/Gamma.RoboKP.Application.csproj", "Gamma.RoboKP.Application/"]
 COPY ["Gamma.RoboKP.Domain/Gamma.RoboKP.Domain.csproj", "Gamma.RoboKP.Domain/"]
+COPY ["Gamma.RoboKP.Infrastructure/Migrations/", "Gamma.RoboKP.Infrastructure/Migrations/"]
 
 # Восстанавливаем зависимости основного проекта
 RUN dotnet restore "Gamma.RoboKP/Gamma.RoboKP.csproj"

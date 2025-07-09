@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using AuthOptions = Gamma.RoboKP.Domain.Options.AuthOptions;
 
 namespace Gamma.RoboKP.Controllers;
+
 [ApiController]
 [Route("api/auth")]
 public class AuthController(IOptions<AuthOptions> authOptions,
@@ -185,6 +186,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
     }
 
     [HttpPost("confirm-email")]
+    [AuthExceptions]
     public async Task<ActionResult> ConfirmEmail(ConfirmEmailRequest confirmEmailRequest)
     {
         var result = await mailService.ConfirmMail(confirmEmailRequest.Email, confirmEmailRequest.Code);
@@ -194,5 +196,18 @@ public class AuthController(IOptions<AuthOptions> authOptions,
             
         }
         return BadRequest(new { Message = "Неверный код подтверждения" });
+    }
+
+    [HttpPost("send-email-again/{email}")]
+    [AuthExceptions]
+    public async Task<ActionResult<bool>> SendEmailAgain([FromRoute] string email)
+    {
+        var result = await authService.SendCodeAgain(email);
+
+        if (!result)
+        {
+            return Unauthorized();
+        }
+        return Ok();
     }
 }

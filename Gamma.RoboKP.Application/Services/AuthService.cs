@@ -153,6 +153,27 @@ public class AuthService(ITokenRepository refreshTokenRepository,
         
         return user;
     }
-    
-    
+
+    public async Task<bool> SendCodeAgain(string email)
+    {
+        var user = await userRepository.FindByEmailAsync(email);
+        
+        if (user == null)
+        {
+            return false;
+        }
+        
+        var confirmationCode =  mailService.GenerateConfirmationCode();
+        user.SetVerifyCode(confirmationCode);
+        await userRepository.UpdateAsync(user);
+                
+        var mailData = new MailData(
+            user.Email,
+            user.Email,
+            "Подтверждение регистрации",
+            $"Ваш код подтверждения: {confirmationCode}");
+         
+        var result =mailService.SendMail(mailData);
+        return result;
+    }
 }

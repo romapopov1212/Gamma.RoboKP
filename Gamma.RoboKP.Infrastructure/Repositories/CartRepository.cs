@@ -19,16 +19,16 @@ public class CartRepository([FromKeyedServices("RepositoryMapper")] IMapper mapp
         return mapper.Map<List<CartEntity>>(result);
     }
 
-    public async Task<CartEntity> Get(string userId)
+    public async Task<CartEntity?> Get(long userId)
     {
         var result = await context.Carts.FindAsync(userId);
         return result != null ? mapper.Map<CartEntity>(result) : new CartEntity(userId);
     }
 
-    public async Task<string> AddProduct(string userId, long productId)
+    public async Task<long?> AddProduct(long userId, long productId)
     {
         var product = await context.Products.FindAsync(productId);
-        if (product == null) return "";
+        if (product == null) return null;
         
         var cart = await context.Carts.FindAsync(userId);
         if (cart == null)
@@ -40,11 +40,11 @@ public class CartRepository([FromKeyedServices("RepositoryMapper")] IMapper mapp
         var cartProduct = new CartProduct
             { ProductId = productId, Product = product, Cart = cart, CartId = cart.UserId };
         await context.CartProducts.AddAsync(cartProduct);
-        
-        return await context.SaveChangesAsync() > 0 ? userId : "";
+
+        return await context.SaveChangesAsync() > 0 ? userId : null;
     }
 
-    public async Task<bool> Flush(string userId)
+    public async Task<bool> Flush(long userId)
     {
         var cart = await context.Carts.FindAsync(userId);
         if (cart == null) return false;
@@ -54,20 +54,20 @@ public class CartRepository([FromKeyedServices("RepositoryMapper")] IMapper mapp
         return await context.SaveChangesAsync() > 0;
     }
 
-    public async Task<string> RemoveProduct(string userId, long productId)
+    public async Task<long?> RemoveProduct(long userId, long productId)
     {
         var cart = await context.Carts.FindAsync(userId);
-        if (cart == null) return "";
+        if (cart == null) return null;
         
         var cartProducts = context.CartProducts
             .Where(p => p.CartId == userId && p.ProductId == productId).ToList();
 
         context.CartProducts.RemoveRange(cartProducts);
         
-        return await context.SaveChangesAsync() > 0 ? userId : "";
+        return await context.SaveChangesAsync() > 0 ? userId : null;
     }
 
-    public async Task<List<ProductEntity>?> GetProducts(string userId)
+    public async Task<List<ProductEntity>?> GetProducts(long userId)
     {
         var cart = await context.Carts.FindAsync(userId);
         if (cart == null) return null;
