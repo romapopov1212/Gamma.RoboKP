@@ -38,7 +38,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         Response.Cookies.Append("access_token", token, new CookieOptions //todo: пока что так, но по идее нужно добавлять токены только после подтверждения почты
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = false, // http temporary
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddMinutes(_authOptions.ExpireMinutes),
         });
@@ -46,7 +46,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = false,
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddDays(_authOptions.RefreshTokenExpireDays),
         });
@@ -73,7 +73,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         Response.Cookies.Append("access_token", token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = false,
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddMinutes(_authOptions.ExpireMinutes),
         });
@@ -81,7 +81,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = false,
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddDays(_authOptions.RefreshTokenExpireDays),
         });
@@ -141,7 +141,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         Response.Cookies.Append("access_token", token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = false,
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddMinutes(_authOptions.ExpireMinutes),
         });
