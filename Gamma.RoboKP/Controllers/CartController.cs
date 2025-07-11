@@ -17,14 +17,25 @@ public class CartController(
     [FromKeyedServices("ControllerMapper")] IMapper mapper) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<CartResponseDto>>> GetAllCarts() // не раьротет
+    public async Task<ActionResult<List<CartResponseDto>>> GetAllCarts()
     {
-        var result = await cartService.GetAll();
         
+        var cartEntities = await cartService.GetAll();
+    
+        var result = new List<CartResponseDto>();
+    
+        foreach (var cartEntity in cartEntities)
+        {
+            var productsId = cartEntity.Products?.Select(p => p.Id).ToList() ?? new List<long>();
         
-        
-        var cart = mapper.Map<List<CartResponseDto>>(result);
-        return Ok(cart);
+            result.Add(new CartResponseDto(
+                UserId: cartEntity.UserId,
+                ProductsId: productsId
+            ));
+        }
+    
+        return Ok(result);
+       
     }
 
     [HttpGet("products")]

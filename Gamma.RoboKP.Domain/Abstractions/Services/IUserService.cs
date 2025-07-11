@@ -18,4 +18,5 @@ public interface IUserService
     Task<string?> GeneratePasswordResetTokenAsync(string email);
     Task<IdentityResult?> ResetPassword(string email, string token, string newPassword);
     Task<bool> SetCompanyInfo(Company company, long userId);
+    (string Email, string ResetToken) DecodePasswordResetToken(string token);
 }

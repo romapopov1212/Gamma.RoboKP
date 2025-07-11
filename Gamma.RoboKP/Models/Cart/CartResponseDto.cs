@@ -6,5 +6,5 @@ public record CartResponseDto(
     [Required]
     long UserId,
     [Required]
-    List<long> ProductIds
+    List<long> ProductsId 
     );

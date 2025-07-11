@@ -11,5 +11,5 @@ public class CartEntity
     }
     
     public long UserId { get; set; }
-    public List<ProductEntity> Products { get; private set; }
+    public List<ProductEntity> Products { get; set; }
 }

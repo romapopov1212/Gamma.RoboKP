@@ -12,11 +12,17 @@ public class CartRepository([FromKeyedServices("RepositoryMapper")] IMapper mapp
 {
     public async Task<List<CartEntity>> GetAll()
     {
-        var result = await context.Carts.ToListAsync();
-        result.ForEach(
-            cart => cart.CartProducts = context.CartProducts.Where(cp => cp.CartId == cart.UserId).ToList()
-            );
-        return mapper.Map<List<CartEntity>>(result);
+        return await context.Carts
+            .AsNoTracking()
+            .Include(c => c.CartProducts)
+            .Select(c => new CartEntity(c.UserId)
+            {
+                Products = c.CartProducts.Select(cp => new ProductEntity
+                {
+                    Id = cp.ProductId 
+                }).ToList()
+            })
+            .ToListAsync();
     }
 
     public async Task<CartEntity?> Get(long userId)

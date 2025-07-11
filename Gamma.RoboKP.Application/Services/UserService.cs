@@ -1,17 +1,25 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Gamma.RoboKP.Domain.Abstractions.Repositories;
 using Gamma.RoboKP.Domain.Abstractions.Services;
 using Gamma.RoboKP.Domain.Entities;
 using Gamma.RoboKP.Domain.Enums;
 using Gamma.RoboKP.Domain.Exceptions;
+using Gamma.RoboKP.Domain.Options;
 using Gamma.RoboKP.Domain.ValueObject;
 using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 
 namespace Gamma.RoboKP.Application.Services;
 
-public class UserService(IUserRepository userRepository) : IUserService
+public class UserService(IUserRepository userRepository, IOptions<AuthOptions> authOptions) : IUserService
 {
+    private readonly AuthOptions _authOptions = authOptions.Value;
+    
     public async Task<string?> GetUserRole(long id)
     {
         var user = await userRepository.FindByIdAsync(id);
@@ -167,4 +175,31 @@ public class UserService(IUserRepository userRepository) : IUserService
     {
         return await userRepository.SetCompanyInfo(company, userId);
     }
+    
+    public (string Email, string ResetToken) DecodePasswordResetToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(_authOptions.TokenPrivateKey);
+    
+        tokenHandler.ValidateToken(token, new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ClockSkew = TimeSpan.Zero
+        }, out SecurityToken validatedToken);
+    
+        var jwtToken = (JwtSecurityToken)validatedToken;
+        var emailClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "email");
+        var resetTokenClaim = jwtToken.Claims.First(x => x.Type == "reset_token");
+
+        if (emailClaim == null || resetTokenClaim == null)
+        {
+            throw new SecurityTokenException("Invalid token");
+        }
+        
+        return (emailClaim.Value, resetTokenClaim.Value);
+    }
+    
 }

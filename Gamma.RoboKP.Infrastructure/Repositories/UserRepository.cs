@@ -1,18 +1,28 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Gamma.RoboKP.Domain.Abstractions.Repositories;
 using Gamma.RoboKP.Domain.Entities;
 using Gamma.RoboKP.Domain.Enums;
 using Gamma.RoboKP.Domain.Exceptions;
+using Gamma.RoboKP.Domain.Options;
 using Gamma.RoboKP.Domain.ValueObject;
 using Gamma.RoboKP.Infrastructure.Models;
 using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Gamma.RoboKP.Infrastructure.Repositories;
 
-public class UserRepository(UserManager<AppUser> userManager, [FromKeyedServices("RepositoryMapper")] IMapper mapper) : IUserRepository
+public class UserRepository(UserManager<AppUser> userManager,
+    [FromKeyedServices("RepositoryMapper")] IMapper mapper,
+    IOptions<AuthOptions> authOptions) : IUserRepository
 {
+    
+    private readonly AuthOptions _authOptions = authOptions.Value;
     public async Task<User?> FindByEmailAsync(string email)
     {
         var appUser = await userManager.FindByEmailAsync(email);
@@ -194,9 +204,26 @@ public class UserRepository(UserManager<AppUser> userManager, [FromKeyedServices
         var appUser = await userManager.FindByEmailAsync(email);
         if (appUser == null) return null;
         
-        var token = await userManager.GeneratePasswordResetTokenAsync(appUser);
+        var resetToken = await userManager.GeneratePasswordResetTokenAsync(appUser);
         
-        return token;
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(_authOptions.TokenPrivateKey);
+
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity([
+                new Claim(ClaimTypes.Email, email),
+                new Claim("reset_token", resetToken),
+            ]),
+            Expires = DateTime.UtcNow.AddMinutes(15),
+            SigningCredentials =
+                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+        };
+        
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        var jwtToken = tokenHandler.WriteToken(token);
+        
+        return jwtToken;
     }
 
     public async Task<IdentityResult?> ResetPassword(string email, string token, string newPassword)

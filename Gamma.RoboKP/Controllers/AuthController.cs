@@ -54,8 +54,8 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         var newUserResponse = mapper.Map<User, UserResponse>(user);
         newUserResponse.Id = user.Id;
         newUserResponse.Role = result.Role.ToString();
-        newUserResponse.Token = token;
-        newUserResponse.RefreshToken = refreshToken;
+       // newUserResponse.Token = token;
+        //newUserResponse.RefreshToken = refreshToken;
         newUserResponse.UserName = user.Email;
         
         return Ok(newUserResponse);
@@ -88,8 +88,8 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         
         var newUserResponse = mapper.Map<User, UserResponse>(result);
         
-        newUserResponse.Token = token;
-        newUserResponse.RefreshToken = refreshToken;
+       // newUserResponse.Token = token;
+       // newUserResponse.RefreshToken = refreshToken;
         newUserResponse.UserName = result.Email;
         
         return Ok(newUserResponse);
@@ -151,38 +151,47 @@ public class AuthController(IOptions<AuthOptions> authOptions,
     [HttpPost("forgotpassword")]
     public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
     {
-        if(!ModelState.IsValid) return BadRequest(ModelState);
-        
-        var token = await userService.GeneratePasswordResetTokenAsync(forgotPasswordDto.Email!);
-        
-        if(token is null) return BadRequest("User not found");
+        if (!ModelState.IsValid) 
+            return BadRequest(ModelState);
 
+        var jwtToken = await userService.GeneratePasswordResetTokenAsync(forgotPasswordDto.Email!);
+    
+        if (jwtToken is null) 
+            return BadRequest("User not found");
+        
         var param = new Dictionary<string, string?>
         {
-            { "token", token },
-            { "email", forgotPasswordDto.Email }
+            { "token", jwtToken }
         };
+    
         var callback = QueryHelpers.AddQueryString(forgotPasswordDto.ClientUri!, param);
         
-        var message = new MailData(forgotPasswordDto.Email!, null!, "Reset password token", callback);
-        mailService.SendMail(message);
+        var mailData = new MailData(
+            forgotPasswordDto.Email!,
+            forgotPasswordDto.Email!,
+            "Ссылка для сброса пароля",
+            $"Ваш код подтверждения: {callback}");
+        
+        mailService.SendMail(mailData);
+    
         return Ok();
     }
-
+    
     [HttpPost("resetpassword")]
-    public async Task<ActionResult> ResetPassword(ResetPasswordDto resetPasswordDto)
+    public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordDto resetPasswordDto)
     {
-        if(!ModelState.IsValid) return BadRequest();
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
         
-        var result = await userService.ResetPassword(resetPasswordDto.Email!, resetPasswordDto.Token!, resetPasswordDto.Password!);
+        var (email, resetToken) = userService.DecodePasswordResetToken(resetPasswordDto.Token!);
+    
+        var result = await userService.ResetPassword(email, resetToken, resetPasswordDto.Password!);
+    
+        if (result == null) return NotFound();
         
-        if(result is null) return NotFound();
-
-        if (result.Succeeded) return Ok();
-        
-        var errors = result.Errors.Select(e => e.Description);
-        return BadRequest(new {Errors = errors});
-
+        if (!result.Succeeded) return BadRequest(result.Errors);
+    
+        return Ok();
     }
 
     [HttpPost("confirm-email")]
