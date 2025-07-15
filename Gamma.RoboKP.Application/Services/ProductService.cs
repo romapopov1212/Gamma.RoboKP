@@ -29,6 +29,12 @@ public class ProductService(IProductRepository productRepository, IDiscountRepos
         
         return product;
     }
+
+    public async Task<DiscountEntity?> GetDiscount(string status)
+    {
+        var discount = await discountRepository.Get(status);
+        return discount;
+    }
     
     public async Task<List<ProductEntity>> GetProducts()
     {

@@ -4,7 +4,7 @@ using Gamma.RoboKP.Domain.Entities;
 
 namespace Gamma.RoboKP.Application.Services;
 
-public class CartService(ICartRepository cartRepository) : ICartService
+public class CartService(ICartRepository cartRepository, IProductRepository productRepository) : ICartService
 {
      public async Task<List<CartEntity>> GetAll()
     {
@@ -35,6 +35,16 @@ public class CartService(ICartRepository cartRepository) : ICartService
     public async Task<decimal?> GetTotalCost(long userId)
     {
         var cart = await cartRepository.Get(userId);
-        return cart?.Products.Sum(p => p.Price);
+        if (cart == null) return null;
+
+        decimal cost = 0;
+
+        foreach (var product in cart.Products)
+        {
+            var prod = await productRepository.Get(product.Id);
+            if (prod != null) cost += prod.Price;
+        }
+        
+        return cost;
     }
 }

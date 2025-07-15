@@ -17,9 +17,13 @@ public class SubCategoryController(
     {
         var subCategoryEntity = SubCategoryEntity.Create(name, parentCategoryId);
         
-        var response = await subCategoryService.CreateCategory(subCategoryEntity);
+        var response = await subCategoryService.CreateSubCategory(subCategoryEntity);
+
+        if (response == null) return BadRequest("Ошибка БД");
+        if (!response.Value)
+            return NotFound($"Не существует родительской категории с ID: {parentCategoryId}");
         
-        return Ok(response);
+        return Ok(response.Value);
     }
 
     [HttpGet("{id}")]

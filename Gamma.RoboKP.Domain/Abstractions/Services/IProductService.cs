@@ -11,6 +11,7 @@ public interface IProductService
     Task<List<ProductEntity>?> GetProductByPrice(decimal price);
     Task<List<ProductEntity>?> GetProductByCategory(long? categoryId = null, long? subCategoryId = null);
     Task<ProductEntity?> GetProductWithDiscount(long id, string status);
+    Task<DiscountEntity?> GetDiscount(string status);
     Task<List<ProductEntity>?> SearchAndFilter(string? name = null, decimal? exactPrice = null,
         decimal? minPrice = null, decimal? maxPrice = null, long? categoryId = null, long? subCategoryId = null,
         int page = 1, int pageSize = 50);

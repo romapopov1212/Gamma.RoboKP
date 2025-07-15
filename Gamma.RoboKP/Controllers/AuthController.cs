@@ -183,7 +183,11 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
         
-        var (email, resetToken) = userService.DecodePasswordResetToken(resetPasswordDto.Token!);
+        var decoded = userService.DecodePasswordResetToken(resetPasswordDto.Token!);
+        
+        if (decoded is null) return BadRequest("User not found");
+        
+        var (email, resetToken) = decoded.Value;
     
         var result = await userService.ResetPassword(email, resetToken, resetPasswordDto.Password!);
     

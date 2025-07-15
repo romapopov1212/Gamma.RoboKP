@@ -12,16 +12,18 @@ public class SubCategoryRepository(
     [FromKeyedServices("RepositoryMapper")] IMapper mapper,
     RoboKpDbContext context) : ISubCategoryRepository
 {
-    public async Task<(long, long)> CreateSubCategory(SubCategoryEntity subCategory)
+    // TODO возврат ID вместо bool
+    public async Task<bool?> CreateSubCategory(SubCategoryEntity subCategory)
     {
-        var category = await context.Categories.FindAsync(subCategory.Id);
-        if (category != null) return (0, 0);
+        var category = await context.Categories.FindAsync(subCategory.ParentCategoryId);
+        if (category == null) return false;
         var subCategoryDb = mapper.Map<SubCategoryEntity, SubCategory>(subCategory);
         
         await context.AddAsync(subCategoryDb);
-        await context.SaveChangesAsync();
         
-        return (subCategoryDb.Id, subCategoryDb.ParentCategoryId);
+        if (await context.SaveChangesAsync() <= 0) return null;
+        
+        return true;
     }
 
     public async Task<SubCategoryEntity?> Get(long subCategoryId)

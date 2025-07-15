@@ -29,6 +29,12 @@ builder.Services.AddControllers();
 
 builder.Services.RegisterMapster();
 
+builder.Services.AddLogging(config =>
+{
+    config.AddConsole();
+    config.AddDebug();
+});
+
 builder
     .AddBearerAuthentication()
     .AddOptions()

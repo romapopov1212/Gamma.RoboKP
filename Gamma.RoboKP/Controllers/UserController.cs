@@ -72,7 +72,10 @@ public class UserController(IUserService userService, [FromKeyedServices("Contro
     [AuthExceptions]
     public async Task<ActionResult<bool>> SetRole([FromRoute] long id, [FromHeader] string role)
     {
-        await userService.SetUserRole(id, role);
+        var result = await userService.SetUserRole(id, role);
+        if (result == null) return BadRequest("Ошибка базы данных");
+        if (!result.Value.Item1) return NotFound($"Не существует пользователя с id: {id}");
+        if (!result.Value.Item2) return NotFound($"Не существует роли: {role}");
         return Ok();
     }
     
@@ -88,9 +91,12 @@ public class UserController(IUserService userService, [FromKeyedServices("Contro
     [Authorize(Roles = nameof(UserRole.Admin))]
     [HttpPatch("{id}/setStatus")]
     [AuthExceptions]
-    public async Task<ActionResult<bool>> SetStatus([FromRoute] long id, [FromHeader] string status)
+    public async Task<ActionResult> SetStatus([FromRoute] long id, [FromHeader] string status)
     {
-        await userService.SetStatus(id, status);
+        var result = await userService.SetStatus(id, status);
+        if (result == null) return BadRequest("Ошибка базы данных");
+        if (!result.Value.Item1) return NotFound($"Не существует пользователя с id: {id}");
+        if (!result.Value.Item2) return NotFound($"Не существует статуса: {status}");
         return Ok();
     }
     
@@ -106,7 +112,7 @@ public class UserController(IUserService userService, [FromKeyedServices("Contro
         var response = await userService.UpdateUser(longUserId, userToUpdate.FirstName, userToUpdate.SurName, userToUpdate.LastName, userToUpdate.Email);
         
         if (response) return Ok(); 
-        return BadRequest(response);
+        return BadRequest("Invalid token");
     }
 
     [Authorize(Roles = nameof(UserRole.Admin))]

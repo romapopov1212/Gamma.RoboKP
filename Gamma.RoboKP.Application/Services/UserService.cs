@@ -10,13 +10,17 @@ using Gamma.RoboKP.Domain.Options;
 using Gamma.RoboKP.Domain.ValueObject;
 using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 
 namespace Gamma.RoboKP.Application.Services;
 
-public class UserService(IUserRepository userRepository, IOptions<AuthOptions> authOptions) : IUserService
+public class UserService(
+    ILogger<UserService> logger,
+    IUserRepository userRepository, IOptions<AuthOptions> authOptions
+    ) : IUserService
 {
     private readonly AuthOptions _authOptions = authOptions.Value;
     
@@ -33,60 +37,53 @@ public class UserService(IUserRepository userRepository, IOptions<AuthOptions> a
         return role;
     }
     
-    public async Task SetUserRole(long id, string role)
+    public async Task<(bool, bool)?> SetUserRole(long id, string role)
     {
         var user = await userRepository.FindByIdAsync(id);
         if (user == null)
         {
-            throw new EntityNotFoundException(
-                new List<IdentityError>{new IdentityError()
-                {
-                    Description  = $"Пользователь с id {id} не найден",
-                    Code = "User not found" } });
+            return (false, true);
         }
         var currentUserRoles = await userRepository.GetRole(user);
         
-        if (currentUserRoles == null)
+        if (currentUserRoles == null) // TODO возможно улучшение обработки ошибки
         {
-            throw new EntityNotFoundException(
-                new List<IdentityError>{new IdentityError()
-                {
-                    Description  = "Ошибка. Пользователю не присвоена роль",
-                    Code = "Exception. User role not found." } });
+            return null;
         }
+        
         await userRepository.RemoveFromRole(user, currentUserRoles);
         
         var isSuccessful = await userRepository.AddToRole(user, role);
         if (!isSuccessful.Succeeded)
         {
             var errors = string.Join("; ", isSuccessful.Errors.Select(e => $"{e.Code}: {e.Description}"));
-            throw new Exception($"Ошибка при добавлении роли: {errors}");
+            logger.LogError("Ошибка при добавлении роли: {}", errors);
+            return (true, false);
         }
+
+        return (true, true);
     }
     
-    public async Task<bool> SetStatus(long id, string status)
+    public async Task<(bool, bool)?> SetStatus(long id, string status)
     {
         var user = await userRepository.FindByIdAsync(id);
-    
-        if (user == null)
-        {
-            throw new EntityNotFoundException(
-                new List<IdentityError>{new IdentityError()
-                {
-                    Description  = $"Пользователь с id {id} не найден",
-                    Code = "User not found" } });
-        }
+
+        if (user == null) return (false, true);
         
         if (!Enum.TryParse<UserStatus>(status, ignoreCase: true, out var parsedStatus))
-        {
-            throw new ArgumentException($"Недопустимый статус: {status}", nameof(status));
-        }
+            return (true, false);
         
         user.SetStatus(parsedStatus);
         
         var result = await userRepository.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join("; ", result.Errors.Select(e => $"{e.Code}: {e.Description}"));
+            logger.LogError("Ошибка при обновлении базы данных: {}", errors);
+            return null;
+        }
         
-        return result.Succeeded;
+        return (true, true);
     }
     
     public async Task<string> GetUserStatus(long id)
@@ -111,13 +108,9 @@ public class UserService(IUserRepository userRepository, IOptions<AuthOptions> a
         string? email=null)
     {
         var user = await userRepository.FindByIdAsync(id);
-        if (user == null) 
+        if (user == null)
         {
-            throw new EntityNotFoundException(
-                new List<IdentityError>{new IdentityError()
-                {
-                    Description  = $"Пользователь с id {id} не найден",
-                    Code = "User not found" } });
+            return false;
         }
         
         if (firstName != null) user.SetFirstName(firstName);
@@ -176,7 +169,7 @@ public class UserService(IUserRepository userRepository, IOptions<AuthOptions> a
         return await userRepository.SetCompanyInfo(company, userId);
     }
     
-    public (string Email, string ResetToken) DecodePasswordResetToken(string token)
+    public (string Email, string ResetToken)? DecodePasswordResetToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_authOptions.TokenPrivateKey);
@@ -196,7 +189,7 @@ public class UserService(IUserRepository userRepository, IOptions<AuthOptions> a
 
         if (emailClaim == null || resetTokenClaim == null)
         {
-            throw new SecurityTokenException("Invalid token");
+            return null;
         }
         
         return (emailClaim.Value, resetTokenClaim.Value);

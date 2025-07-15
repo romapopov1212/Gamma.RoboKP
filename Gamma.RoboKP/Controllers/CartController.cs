@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Gamma.RoboKP.Controllers;
-//todo: протестировать
+
 [Authorize]
 [ApiController]
 [Route("api/carts")]
 public class CartController(
     ICartService cartService,
+    IProductService productService,
     [FromKeyedServices("ControllerMapper")] IMapper mapper) : ControllerBase
 {
     [HttpGet]
@@ -93,14 +94,21 @@ public class CartController(
     [HttpGet("cost")]
     public async Task<ActionResult<long>> GetCost()
     {
-        var userStatus = User.FindFirst(ClaimTypes.UserData)?.Value; /// ???
+        var userStatus = User.FindFirst(ClaimTypes.UserData)?.Value;
+        if (userStatus == null) return Unauthorized();
         
         var userIdFromClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userIdFromClaims == null) return Unauthorized();
         
         var userId = int.Parse(userIdFromClaims);
         
-        var result = await cartService.GetTotalCost(userId);
-        return result != null ? Ok(result) : NotFound();
+        // TODO убрать исключение при запросе
+        var cost = await cartService.GetTotalCost(userId);
+        if (cost == null) return NotFound();
+        
+        var discount = await productService.GetDiscount(userStatus);
+        if (discount != null) cost = (decimal)((double)cost * discount.GetMultiplier());
+
+        return (long) cost;
     }
 }

@@ -4,7 +4,7 @@ namespace Gamma.RoboKP.Domain.Abstractions.Services;
 
 public interface ISubCategoryService
 {
-    Task<(long, long)> CreateCategory(SubCategoryEntity subCategoryEntity);
+    Task<bool?> CreateSubCategory(SubCategoryEntity subCategoryEntity);
     Task<SubCategoryEntity?> GetSubCategory(long id);
     Task<List<SubCategoryEntity>> GetSubCategories();
     Task<(long, long)> UpdateSubCategory(long id, string name, long parentCategoryId);

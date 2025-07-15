@@ -6,7 +6,7 @@ namespace Gamma.RoboKP.Application.Services;
 
 public class SubCategoryService(ISubCategoryRepository repository) : ISubCategoryService
 {
-    public async Task<(long, long)> CreateCategory(SubCategoryEntity subCategoryEntity)
+    public async Task<bool?> CreateSubCategory(SubCategoryEntity subCategoryEntity)
     {
         return await repository.CreateSubCategory(subCategoryEntity);
     }

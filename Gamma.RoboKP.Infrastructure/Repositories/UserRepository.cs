@@ -68,7 +68,7 @@ public class UserRepository(UserManager<AppUser> userManager,
         var appUser = await userManager.FindByIdAsync(user.Id.ToString());
 
         if (appUser == null)
-            throw new InvalidOperationException($"User with ID {user.Id} not found");
+            return IdentityResult.Failed();
 
         var result = await userManager.AddToRoleAsync(appUser, role);
         
