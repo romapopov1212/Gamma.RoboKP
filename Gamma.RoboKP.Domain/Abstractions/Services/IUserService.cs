@@ -12,7 +12,7 @@ public interface IUserService
     Task<List<User>> GetAllUsers();
     Task<(bool, bool)?> SetStatus(long id, string status);
     Task<string> GetUserStatus(long id);
-    Task<bool> UpdateUser(long id, string? firstName = null, string? surName = null, string? lastName = null, string? email = null);
+    Task<bool> UpdateUser(long? id, string? emailToSearch = null, string? firstName = null, string? surName = null, string? lastName = null, string? email = null);
     Task<bool> DeleteUser(long id);
     Task<User?> GetUserById(long id);
     Task<string?> GeneratePasswordResetTokenAsync(string email);

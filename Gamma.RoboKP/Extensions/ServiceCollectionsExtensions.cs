@@ -95,6 +95,7 @@ public static class ServiceCollectionsExtensions
 
     public static WebApplicationBuilder AddBearerAuthentication(this WebApplicationBuilder builder)
     {
+        
         builder.Services
             .AddAuthentication(x => // cтандартный метод
             {
@@ -149,6 +150,7 @@ public static class ServiceCollectionsExtensions
             .AddEntityFrameworkStores<RoboKpDbContext>()
             .AddUserManager<UserManager<AppUser>>()
             .AddUserStore<UserStore<AppUser, IdentityRoleEntity, RoboKpDbContext, long>>();
+        
         
         return builder;
     }

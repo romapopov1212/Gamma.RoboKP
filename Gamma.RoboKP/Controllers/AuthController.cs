@@ -39,7 +39,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         {
             HttpOnly = true,
             Secure = false, // http temporary
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.Lax,
             Expires = DateTime.UtcNow.AddMinutes(_authOptions.ExpireMinutes),
         });
         
@@ -47,7 +47,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         {
             HttpOnly = true,
             Secure = false,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.Lax,
             Expires = DateTime.UtcNow.AddDays(_authOptions.RefreshTokenExpireDays),
         });
         
@@ -74,7 +74,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         {
             HttpOnly = true,
             Secure = false,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.Lax,
             Expires = DateTime.UtcNow.AddMinutes(_authOptions.ExpireMinutes),
         });
         
@@ -82,7 +82,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         {
             HttpOnly = true,
             Secure = false,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.Lax,
             Expires = DateTime.UtcNow.AddDays(_authOptions.RefreshTokenExpireDays),
         });
         
@@ -125,7 +125,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
     }
     
     [HttpPost("refresh")]
-    [Authorize]
+    //[Authorize]
     public async Task<ActionResult<UserResponse>> RefreshToken()
     {
         var refreshToken = Request.Cookies["refresh_token"];
@@ -142,7 +142,7 @@ public class AuthController(IOptions<AuthOptions> authOptions,
         {
             HttpOnly = true,
             Secure = false,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.Lax,
             Expires = DateTime.UtcNow.AddMinutes(_authOptions.ExpireMinutes),
         });
         return Ok(result);

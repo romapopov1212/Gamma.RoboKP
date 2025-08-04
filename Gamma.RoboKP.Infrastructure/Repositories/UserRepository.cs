@@ -39,9 +39,9 @@ public class UserRepository(UserManager<AppUser> userManager,
         return entity;
     }
 
-    public async Task<User?> FindByIdAsync(long id)
+    public async Task<User?> FindByIdAsync(long? id)
     {
-        var appUser = await userManager.FindByIdAsync(id.ToString());
+        var appUser = await userManager.FindByIdAsync(id.ToString()!);
         if (appUser == null) return null;
         
         var entity = mapper.Map<AppUser, User>(appUser);

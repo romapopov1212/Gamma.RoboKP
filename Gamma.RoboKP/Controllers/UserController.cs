@@ -88,6 +88,22 @@ public class UserController(IUserService userService, [FromKeyedServices("Contro
         return Ok(result);
     }
 
+    [Authorize]
+    [HttpGet("me")]
+    [AuthExceptions]
+    public async Task<ActionResult<UserToGet>> GetMe()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId is null) return Unauthorized();
+        
+        var longUserId = long.Parse(userId);
+        
+        var user = await userService.GetUserById(longUserId);
+        if (user == null) return NotFound("Пользователь не найден");
+        var response = mapper.Map<User, UserToGet>(user);
+        return response;
+    }
+    
     [Authorize(Roles = nameof(UserRole.Admin))]
     [HttpPatch("{id}/setStatus")]
     [AuthExceptions]
@@ -109,7 +125,7 @@ public class UserController(IUserService userService, [FromKeyedServices("Contro
         
         var longUserId = long.Parse(userId);
         
-        var response = await userService.UpdateUser(longUserId, userToUpdate.FirstName, userToUpdate.SurName, userToUpdate.LastName, userToUpdate.Email);
+        var response = await userService.UpdateUser(longUserId,null, userToUpdate.FirstName, userToUpdate.SurName, userToUpdate.LastName, userToUpdate.Email);
         
         if (response) return Ok(); 
         return BadRequest("Invalid token");
@@ -138,5 +154,14 @@ public class UserController(IUserService userService, [FromKeyedServices("Contro
         
         if (response) return Ok();
         return BadRequest(response);
+    }
+
+    [Authorize(Roles = nameof(UserRole.Admin))]
+    [HttpPatch("user/rewrite")]
+    public async Task<ActionResult> Rewrite([FromBody] UserToUpdate userToUpdate)
+    {
+        var response = await userService.UpdateUser(null , userToUpdate.EmailToSearch, userToUpdate.FirstName, userToUpdate.SurName, userToUpdate.LastName, userToUpdate.Email);
+        if (response) return Ok();
+        return BadRequest("User not found");
     }
 }

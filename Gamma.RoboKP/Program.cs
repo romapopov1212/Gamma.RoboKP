@@ -3,6 +3,7 @@ using Gamma.RoboKP.Domain.Options;
 using Gamma.RoboKP.Extensions;
 using Gamma.RoboKP.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Office.Interop.PowerPoint;
 
 //TODO: при регистрации для подтверждения почты отправлять код на почту 
 //TODO: при попытке входа в аккаунт, у которого не подтвержденный аккаунт
@@ -35,6 +36,7 @@ builder.Services.AddLogging(config =>
     config.AddDebug();
 });
 
+
 builder
     .AddBearerAuthentication()
     .AddOptions()
@@ -52,6 +54,21 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors("AllowSpecific");
 
+app.Use(async (context, next) =>
+{
+    var token = context.Request.Cookies["access_token"];
+    if (!string.IsNullOrEmpty(token) && 
+        !context.Request.Headers.ContainsKey("Authorization"))
+    {
+        context.Request.Headers.Append("Authorization", $"Bearer {token}");
+    }
+
+    await next();
+});
+
+
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapControllers();

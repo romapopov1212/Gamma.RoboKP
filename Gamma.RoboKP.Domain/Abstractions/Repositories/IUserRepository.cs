@@ -7,7 +7,7 @@ namespace Gamma.RoboKP.Domain.Abstractions.Repositories;
 public interface IUserRepository
 {
     Task<User?> FindByEmailAsync(string email);
-    Task<User?> FindByIdAsync(long id);
+    Task<User?> FindByIdAsync(long? id);
     Task<bool> AddAsync(User user, string password);
     Task<IdentityResult> UpdateAsync(User user);
     Task<IdentityResult> AddToRole(User user, string role);

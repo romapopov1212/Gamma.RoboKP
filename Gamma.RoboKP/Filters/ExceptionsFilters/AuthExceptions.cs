@@ -24,14 +24,20 @@ public class AuthExceptions : Attribute, IAsyncExceptionFilter
         }else if (exception is System.Exception ex && ex.Message.Contains("Регистрация не удалась:"))
         {
             var errors = new List<string>();
-            
-            if(ex.Message.Contains("PasswordRequiresDigit"))
+
+            if (ex.Message.Contains("PasswordRequiresDigit"))
                 errors.Add("Пароль должен содержать хотя бы одну цифру(0-9)");
-            
+    
             if (ex.Message.Contains("PasswordRequiresUpper"))
                 errors.Add("Пароль должен содержать хотя бы одну заглавную букву (A-Z)");
 
-            context.Result = new JsonResult(new { message = "Ошибка валидации пароля", errors }) { StatusCode = 400 };
+            var isOnlyPasswordErrors = errors.Count > 0;
+
+            var message = isOnlyPasswordErrors 
+                ? "Ошибка валидации пароля" 
+                : "Регистрация не удалась: неизвестная причина";
+
+            context.Result = new JsonResult(new { message, errors }) { StatusCode = 400 };
         }
         
         return Task.CompletedTask;

@@ -101,17 +101,32 @@ public class UserService(
         return user.Status.ToString();
     }
     
-    public async Task<bool> UpdateUser(long id,
+    public async Task<bool> UpdateUser(long? id,
+        string? emailToSearch = null,
         string? firstName = null, 
         string? surName=null,
         string? lastName=null,
         string? email=null)
     {
-        var user = await userRepository.FindByIdAsync(id);
-        if (user == null)
+        User? user = new User();
+        if (id != null)
         {
-            return false;
+            user = await userRepository.FindByIdAsync(id);
+            if (user == null)
+            {
+                return false;
+            }
         }
+
+        if (emailToSearch != null)
+        {
+            user = await userRepository.FindByEmailAsync(emailToSearch);
+            if (user == null)
+            {
+                return false;
+            }
+        }
+        
         
         if (firstName != null) user.SetFirstName(firstName);
         
@@ -145,7 +160,7 @@ public class UserService(
     
     public async Task<User?> GetUserById(long id)
     {
-        return await userRepository.FindByIdAsync(id);;
+        return await userRepository.FindByIdAsync(id);
     } 
     public async Task<User?> GetUserByEmail(string email)
     {
